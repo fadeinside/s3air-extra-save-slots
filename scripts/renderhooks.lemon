@@ -1,0 +1,63 @@
+function bool Standalone.onWriteToSpriteTable(s16 px, s16 py, u16 renderQueue)
+{
+	u8 gameMode = global.game_mode & 0x7f
+	bool prioFlag = (objA0.sprite_attributes & 0x8000) != 0
+	u8 atex = 0
+	u8 flags = ((objA0.render_flags & 0x01) ? SPRITE_FLAG_FLIP_X : 0) | ((objA0.render_flags & 0x02) ? SPRITE_FLAG_FLIP_Y : 0) | ((objA0.sprite_attributes & 0x8000) ? SPRITE_FLAG_PRIO : 0)
+		
+	if (objA0.update_address == 0xd1fa) // cursor
+		return true
+
+	if (objA0.update_address == 0x00d142) // DATA SELECT text from data select text customizer
+		return true // screw your text
+	
+	if (objA0.update_address == 0x00d30c || objA0.update_address == 0x00d42c) // god damn it.
+		return false
+		
+	return base.Standalone.onWriteToSpriteTable(px, py, renderQueue)
+}
+
+function bool Standalone.onDrawVdpSpriteCompound(s16 px, s16 py, u8 size, u16 index, u16 renderQueue, u8 spriteCounter)
+{
+	if (objA0.update_address == 0x00d30c || objA0.update_address == 0x00d42c)
+	{
+		py += ESS_bg_scroll
+		// players?
+		if (index == 0xab0b || index == 0xab17 || index == 0xab1d || index == 0xab1e || index == 0xab26 || index == 0xab2e || index == 0xa31d || index == 0xa31e || index == 0xa326 || index == 0xa32e || index == 0xab2f || index == 0xab3b || index == 0xab3e || index == 0xa342 || index == 0xa34e)
+			return true
+		
+		if (index >= 0xe5ba && index <= 0xe5fa || index >= 0xe454 && index <= 0xe494) // save port
+		{
+			renderQueue -= 0x1000
+			u32 slot_num = (A0-0xffffb128)/0x4a
+			s16 py_shift = ESS_getsaveboxyoff(0)-13
+			if (base.Standalone.onDrawVdpSpriteCompound(px, py+py_shift, size, index, renderQueue, spriteCounter))
+				return true
+
+			Renderer.drawVdpSprite(px, py+py_shift, size, index, renderQueue)
+			return true
+		}
+		
+		if (index == 0x83bd || index == 0x93bd)
+		{
+			s16 py_shift = (dataselect.slot_selected == 0) ? 8 : 12
+			if (index == 0x83bd)
+				py_shift = -py_shift
+			
+			if (dataselect.slot_selected == 0)
+				py += 14
+			else
+				py += 10
+			Renderer.drawVdpSprite(px, py+py_shift, size, index, renderQueue)
+			return true
+		}
+	}
+	
+	if (objA0.update_address == 0x00d70c)
+		return true
+	
+	if (objA0.update_address == 0x1abc6 && (index >= 0xa2e1 && index <= 0xa305)) // DATA SELECT text
+		return true // screw your text
+	
+	return base.Standalone.onDrawVdpSpriteCompound(px, py, size, index, renderQueue, spriteCounter)
+}

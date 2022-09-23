@@ -1,0 +1,18 @@
+{
+	"ESS_Cemrl_E":  { "File": "emeralds.png", "Rect": "112,0,16,16", "Center": "8,8" },
+	"ESS_Cemrl_1":  { "File": "emeralds.png", "Rect": "0,0,16,16", "Center": "8,8" },
+	"ESS_Cemrl_2":  { "File": "emeralds.png", "Rect": "16,0,16,16", "Center": "8,8" },
+	"ESS_Cemrl_3":  { "File": "emeralds.png", "Rect": "32,0,16,16", "Center": "8,8" },
+	"ESS_Cemrl_4":  { "File": "emeralds.png", "Rect": "48,0,16,16", "Center": "8,8" },
+	"ESS_Cemrl_5":  { "File": "emeralds.png", "Rect": "64,0,16,16", "Center": "8,8" },
+	"ESS_Cemrl_6":  { "File": "emeralds.png", "Rect": "80,0,16,16", "Center": "8,8" },
+	"ESS_Cemrl_7":  { "File": "emeralds.png", "Rect": "96,0,16,16", "Center": "8,8" },
+	"ESS_Semrl_E":  { "File": "emeralds.png", "Rect": "96,16,16,16", "Center": "8,8" },
+	"ESS_Semrl_1":  { "File": "emeralds.png", "Rect": "0,16,16,16", "Center": "8,8" },
+	"ESS_Semrl_2":  { "File": "emeralds.png", "Rect": "16,16,16,16", "Center": "8,8" },
+	"ESS_Semrl_3":  { "File": "emeralds.png", "Rect": "32,16,16,16", "Center": "8,8" },
+	"ESS_Semrl_4":  { "File": "emeralds.png", "Rect": "48,16,16,16", "Center": "8,8" },
+	"ESS_Semrl_5":  { "File": "emeralds.png", "Rect": "64,16,16,16", "Center": "8,8" },
+	"ESS_Semrl_6":  { "File": "emeralds.png", "Rect": "80,16,16,16", "Center": "8,8" },
+	"ESS_Semrl_7":  { "File": "emeralds.png", "Rect": "96,16,16,16", "Center": "8,8" }
+}

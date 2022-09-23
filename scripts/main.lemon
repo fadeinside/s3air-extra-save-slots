@@ -1,0 +1,145 @@
+include dataselect
+include renderhooks
+include saveslots
+
+// menu stuff
+global u8 ESS_save_entered
+global s8 ESS_save_page
+global u8 ESS_robotnik_timer
+global s16 ESS_bg_scroll
+global u64 ESS_zonename
+
+global u8 ESS_menu_style
+
+constant u8 ESS_page_count = 5
+
+function void Init()
+{
+	base.Init()
+}
+
+function u64 ESS_getSaveStr(string lol)
+{
+	u64 returnstr = stringformat("%s_page%d", lol, ESS_save_page)
+	if (ESS_save_page == 0)
+		returnstr = lol
+	return returnstr
+}
+#define EXTRA_SAVE_SLOTS_ACTIVE = 1
+
+//# address-hook(0x003af0) end(0x003b12)
+function void Menu.FadeInAfterInit()
+{
+	if (global.game_mode != 0x4c)
+	{
+		base.Menu.FadeInAfterInit()
+		return
+	}
+	
+	u8 lastGameMode = global.game_mode
+
+	SetPaletteFadedOut(0x003f)
+	D4.u16 = 0x15
+	while (D4.s16 >= 0)
+	{
+		global.frame_state = 0x12
+		waitForNextFrame()
+
+		FadeInPalette()
+		LoadRequiredSpritePatterns()
+		--D4.s16
+
+	#if STANDALONE
+		// SEGA logo
+		if (global.game_mode == 0x04)
+		{
+			Renderer.resetSprites()
+			Renderer.drawCustomSprite("original_game_by", getScreenWidth() / 2 - 85, 60, 0x00, 0, 0x2000, 0, u16(u8[0xfffffc01] & 0x0e) * 96 / 0x0e)
+		}
+
+		// Data Select
+		if (global.game_mode == 0x4c || lastGameMode == 0x4c)
+		{
+			// Quick scroll-in effect
+			if (ESS_bg_scroll < 0)
+			{
+				ESS_bg_scroll += 40
+				if (ESS_bg_scroll >= 0)
+					ESS_bg_scroll = 0
+			}
+		
+			// Draw our own widescreen version of the background
+			//  -> For this to work, we need to update the sprites as well
+			u16 backupD4 = D4.u16
+			UpdateGameObjects()
+			RenderSprites()
+
+			// Update scroll offset (if the player scrolls during fade-in already)
+			u16[0xffffe002] = -camera.foreground.x.u16
+
+			DataSelect.drawCustomPlanes()
+			ESS_drawSaveBoxes()
+			D4.u16 = backupD4
+		}
+	#endif
+	}
+}
+
+//# address-hook(0x0067b6) end(0x0067ec)
+function void SetGlobalCharacters()
+{
+	if ((Mods.isModActive("Extra Characters Base") || Mods.isModActive("Extra Character Slots")) == 0)
+	{
+		base.SetGlobalCharacters()
+		return
+	}
+	
+	if (levelselect.characters != 1 && u8[0xffffe654] != 2 && u8[0xffffe654] != 3)
+	{
+		u8[0xffffe654] = 0
+	}
+
+	if (dataselect.slot_selected > 0)
+	{
+		u8 saveOffset = 0x820000
+
+		for (u8 offset = dataselect.slot_selected; offset < 1; --offset)
+		{
+			++saveOffset
+		}
+		saveOffset *= 0x04
+	
+		u8 please = System.loadPersistentData(saveOffset, ESS_getSaveStr(stringformat("ExtraSlot_%d", dataselect.slot_selected)), 0x04)
+		u8[0xffffe654] = please
+	}
+
+	if (global.game_mode != 0x88 && competition_mode.active == 0)
+	{
+		if (u8[0xffffe654] != 0) // Only do it when on Sonic/extra slots
+		{
+			System.callFunctionByName(stringformat("Slot%xChar", u8[0xffffe654]))
+			return
+		}
+		else
+		{
+			global.characters = levelselect.characters
+		#if STANDALONE
+			// Handle Knuckles & Tails
+			useKnucklesAndTails = (global.characters == 4)
+			global.characters = min(global.characters, 3)
+		#endif
+		}
+	}
+	else if (global.zone == 0x07)	// MHZ
+	{
+		global.characters = CHARS_KNUCKLES_ALONE
+	}
+	else if (global.lock_on_state == 0)
+	{
+		global.characters = CHARS_SONIC_AND_TAILS
+	}
+	else
+	{
+		global.characters = CHARS_SONIC_ALONE
+	}
+}

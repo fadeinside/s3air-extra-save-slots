@@ -1,0 +1,20 @@
+{
+	"ESS_Char_Sonic":  { "File": "dataSel_sonic.png", "Rect": "0,0,32,40", "Center": "18,40" },
+	"ESS_Char_Tails":  { "File": "dataSel_tails.png", "Rect": "0,0,40,40", "Center": "25,40" },
+	"ESS_Char_Knuckles":  { "File": "dataSel_knuckles.png", "Rect": "0,0,32,40", "Center": "13,40" },
+	"ESS_Char_Es1":  { "File": "dataSel_es1.png", "Rect": "0,0,32,40", "Center": "18,40" },
+	"ESS_Char_Es2":  { "File": "dataSel_es2.png", "Rect": "0,0,32,40", "Center": "18,40" },
+	"ESS_Char_Es3":  { "File": "dataSel_es3.png", "Rect": "0,0,32,40", "Center": "18,40" },
+	"ESS_Life_Sonic":  { "File": "icons.png", "Rect": "0,0,16,16", "Center": "8,16" },
+	"ESS_Life_Tails":  { "File": "icons.png", "Rect": "16,0,16,16", "Center": "8,16" },
+	"ESS_Life_Knuckles":  { "File": "icons.png", "Rect": "32,0,16,16", "Center": "8,16" },
+	"ESS_Life_Es1":  { "File": "icons_es.png", "Rect": "0,0,16,16", "Center": "8,16" },
+	"ESS_Life_Es2":  { "File": "icons_es.png", "Rect": "16,0,16,16", "Center": "8,16" },
+	"ESS_Life_Es3":  { "File": "icons_es.png", "Rect": "32,0,16,16", "Center": "8,16" },
+	"ESS_Cont_Sonic":  { "File": "icons.png", "Rect": "0,16,20,24", "Center": "10,24" },
+	"ESS_Cont_Tails":  { "File": "icons.png", "Rect": "20,16,20,24", "Center": "10,24" },
+	"ESS_Cont_Knuckles":  { "File": "icons.png", "Rect": "40,16,20,24", "Center": "10,24" },
+	"ESS_Cont_Es1":  { "File": "icons_es.png", "Rect": "0,16,20,24", "Center": "10,24" },
+	"ESS_Cont_Es2":  { "File": "icons_es.png", "Rect": "20,16,20,24", "Center": "10,24" },
+	"ESS_Cont_Es3":  { "File": "icons_es.png", "Rect": "40,16,20,24", "Center": "10,24" }
+}

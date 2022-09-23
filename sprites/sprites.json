@@ -1,0 +1,9 @@
+{
+	"ESS_SaveBox":  { "File": "SaveBox.png", "Rect": "0,0,90,178", "Center": "0,-12" },
+	"ESS_SaveBox_tag":  { "File": "SaveBox.png", "Rect": "91,52,90,11", "Center": "0,0" },
+	"ESS_NoSaveBox":  { "File": "SaveBox.png", "Rect": "0,179,90,62", "Center": "0,-12" },
+	"ESS_NoSaveBox_tag":  { "File": "SaveBox.png", "Rect": "91,63,90,11", "Center": "0,0" },
+	"ESS_charbgcolor":  { "File": "SaveBox.png", "Rect": "91,0,84,49", "Center": "0,0" },
+	"bg_dataselect_fs":  { "File": "bg_failsafe.bmp", "Rect": "0,0,496,224", "Center": "248,0" },
+	"ESS_EggBox":  { "File": "eggybox.png", "Rect": "0,0,90,80", "Center": "0,-12" }
+}
