@@ -3,6 +3,7 @@
 include dataselect
 include renderhooks
 include saveslots
+include extrafunctions
 
 // menu stuff
 global u8 ESS_save_entered

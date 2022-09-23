@@ -411,12 +411,8 @@ function void ESS_drawSaveBox(u8 num, s16 px, s16 py)
 	// draw the characters
 
 	s32 color = ESS_saveboxgetcolor(chars)
-	if (ES_val == 1)
-		color = ESS_saveboxgetcolor_Es1()
-	else if (ES_val == 2)
-		color = ESS_saveboxgetcolor_Es2()
-	else if (ES_val == 3)
-		color = ESS_saveboxgetcolor_Es3()
+	if (ES_val > 0x00)
+		color = ESS_saveboxgetcolor_Es(ES_val)
 	color = (color << 8) + 0xff
 	
 	// draw the solid color bg & the character sprite
@@ -445,12 +441,8 @@ function void ESS_drawNoSaveBox(s16 px, s16 py)
 	
 	s32 color = ESS_saveboxgetcolor(u16[0xffffef4c])
 	u8 ES_val = u8[A3 + 0x24]
-	if (ES_val == 1)
-		color = ESS_saveboxgetcolor_Es1()
-	else if (ES_val == 2)
-		color = ESS_saveboxgetcolor_Es2()
-	else if (ES_val == 3)
-		color = ESS_saveboxgetcolor_Es3()
+	if (ES_val > 0x00)
+		color = ESS_saveboxgetcolor_Es(ES_val)
 	color = (color << 8) + 0xff
 	
 	Renderer.drawSpriteTinted("ESS_charbgcolor", px+3, py+16, 0, 0, 0x3fff, 0, color, 0x10000)
@@ -519,19 +511,9 @@ function void ESS_drawcharacters(s16 px, s16 py, u8 chars, bool no_save)
 	
 	u8 ES_val = u8[A3 + 0x24]
 	
-	if (ES_val == 1)
+	if (ES_val > 0x00)
 	{
-		if (ESS_drawchar_Es1(px, py, no_save))
-			return
-	}
-	else if (ES_val == 2)
-	{
-		if (ESS_drawchar_Es2(px, py, no_save))
-			return
-	}
-	else if (ES_val == 3)
-	{
-		if (ESS_drawchar_Es3(px, py, no_save))
+		if (ESS_drawchar_Es(px, py, no_save, ES_val))
 			return
 	}
 	
@@ -595,30 +577,6 @@ function void ESS_drawchar(s16 px, s16 py, u64 key, bool xflip)
 	Renderer.drawSprite(key, px, py, 0, (xflip) ? SPRITE_FLAG_FLIP_X : 0, 0x6000)
 }
 
-function bool ESS_drawchar_Es1(s16 px, s16 py, bool no_save)
-{
-	s16 cx = px+45
-	s16 cy = (no_save) ? py+63 : py+137
-	ESS_drawchar(cx, cy, "ESS_Char_Es1", false)
-	return true
-}
-
-function bool ESS_drawchar_Es2(s16 px, s16 py, bool no_save)
-{
-	s16 cx = px+45
-	s16 cy = (no_save) ? py+63 : py+137
-	ESS_drawchar(cx, cy, "ESS_Char_Es2", false)
-	return true
-}
-
-function bool ESS_drawchar_Es3(s16 px, s16 py, bool no_save)
-{
-	s16 cx = px+45
-	s16 cy = (no_save) ? py+63 : py+137
-	ESS_drawchar(cx, cy, "ESS_Char_Es3", false)
-	return true
-}
-
 function u64 ESS_getcharspr(u8 character)
 {
 	if (character == 0xff)
@@ -653,21 +611,6 @@ function s32 ESS_saveboxgetcolor(u8 chars)
 	return color
 }
 
-function s32 ESS_saveboxgetcolor_Es1()
-{
-	return 0xff00ff
-}
-
-function s32 ESS_saveboxgetcolor_Es2()
-{
-	return 0xff00ff
-}
-
-function s32 ESS_saveboxgetcolor_Es3()
-{
-	return 0xff00ff
-}
-
 function void ESS_drawcharicons(u8 chars, s16 px, s16 py)
 {	
 	u64 charname = ESS_getcharname(chars)
@@ -699,12 +642,16 @@ function u64 ESS_getcharname(u8 chars)
 function u64 ESS_getcharlifeicon(u64 name)
 {
 	u64 key = stringformat("ESS_Life_%s", name)
+	if (!Renderer.hasCustomSprite(key))
+		key = "ESS_Life_Es"
 	return key
 }
 
 function u64 ESS_getcharconticon(u64 name)
 {
 	u64 key = stringformat("ESS_Cont_%s", name)
+	if (!Renderer.hasCustomSprite(key))
+		key = "ESS_Cont_Es"
 	return key
 }
 
