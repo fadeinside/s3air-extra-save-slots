@@ -2,13 +2,13 @@
 	"ESS_Char_Sonic":  { "File": "dataSel_sonic.png", "Rect": "0,0,32,40", "Center": "18,40" },
 	"ESS_Char_Tails":  { "File": "dataSel_tails.png", "Rect": "0,0,40,40", "Center": "25,40" },
 	"ESS_Char_Knuckles":  { "File": "dataSel_knuckles.png", "Rect": "0,0,32,40", "Center": "13,40" },
-	"ESS_Char_Es":  { "File": "dataSel_es.png", "Rect": "0,0,32,40", "Center": "18,40" },
+	"ESS_Char_Es_Error":  { "File": "dataSel_es_error.png", "Rect": "0,0,40,43", "Center": "20,43" },
 	"ESS_Life_Sonic":  { "File": "icons.png", "Rect": "0,0,16,16", "Center": "8,16" },
 	"ESS_Life_Tails":  { "File": "icons.png", "Rect": "16,0,16,16", "Center": "8,16" },
 	"ESS_Life_Knuckles":  { "File": "icons.png", "Rect": "32,0,16,16", "Center": "8,16" },
-	"ESS_Life_Es":  { "File": "icons_es.png", "Rect": "0,0,16,16", "Center": "8,16" },
+	"ESS_Life_Es_Error":  { "File": "icons_es_error.png", "Rect": "0,0,16,16", "Center": "8,16" },
 	"ESS_Cont_Sonic":  { "File": "icons.png", "Rect": "0,16,20,24", "Center": "10,24" },
 	"ESS_Cont_Tails":  { "File": "icons.png", "Rect": "20,16,20,24", "Center": "10,24" },
 	"ESS_Cont_Knuckles":  { "File": "icons.png", "Rect": "40,16,20,24", "Center": "10,24" },
-	"ESS_Cont_Es":  { "File": "icons_es.png", "Rect": "0,16,20,24", "Center": "10,24" }
+	"ESS_Cont_Es_Error":  { "File": "icons_es_error.png", "Rect": "0,16,20,24", "Center": "10,24" },
 }
