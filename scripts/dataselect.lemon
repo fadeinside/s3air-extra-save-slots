@@ -4,7 +4,12 @@ function void loadupDataSelect()
 	
 	// Load save states
 	InitSaveSlots()
-
+	
+	// Load extra characters data
+#if EXTRA_CHARACTERS_ACTIVE
+	System.loadPersistentData(sharedmemory.xtrachar, ESS_getSaveStr("SRAM_Extraslots"), 0x08)
+#endif
+	
 	// Go to Data Select
 	global.game_mode = 0x4c
 	DataSelect.setup()
@@ -146,10 +151,13 @@ function void DataSelect.setup()
 	loadCharacterPalette(CHARACTER_KNUCKLES, 0x802200, 0)
 	
 	VDP.Config.setActiveDisplay(true)
-
+	
 	ESS_save_entered = 0
 	ESS_save_page = 0
-	u8[0xffffe654] = 0
+	
+#if EXTRA_CHARACTERS_ACTIVE
+	global.xtrachar = 0
+#endif
 }
 
 function void DataSelect.update()
@@ -261,19 +269,18 @@ function void fn00d42c()
 		{
 			if (control.pad1.pressed & DataSelect.CONTROLS_ACCEPT)
 			{
-				if (Mods.isModActive("Extra Characters Base") || Mods.isModActive("Extra Character Slots"))
+			#if EXTRA_CHARACTERS_ACTIVE
+				// Save characters only for 1 ~ 8 slots
+				if (dataselect.slot_selected > 0x00 && dataselect.slot_selected < 0x09 && objA0.animation.timer > 0x00)
 				{
-					if (dataselect.slot_selected > 0x00 && dataselect.slot_selected < 0x09 && objA0.animation.timer != 0x00)
-					{
-						u8 saveOffset = 0x820000
-						for (u8 offset = dataselect.slot_selected; offset < 0x01; --offset)
-							saveOffset += 0x01
-						saveOffset *= 0x04
-						
-						System.savePersistentData(saveOffset, ESS_getSaveStr(stringformat("ExtraSlot_%d", dataselect.slot_selected)), 0x00) //Doesn't really matter, but might as well
-						System.savePersistentData(saveOffset, ESS_getSaveStr(stringformat("ExtraSlot_%d", dataselect.slot_selected)), u8[0xffffe654])
-					}
+					// Determine extra slot address offset and set character ID
+					u32 tempValue0 = sharedmemory.xtrachar + u32(dataselect.slot_selected - 0x01)
+					u8[tempValue0] = global.xtrachar
+					
+					// Save the data
+					System.savePersistentData(sharedmemory.xtrachar, ESS_getSaveStr("SRAM_Extraslots"), 0x08)
 				}
+			#endif
 				levelselect.characters = u16[A0 + 0x34]
 
 				// Initialize the new save state
@@ -307,46 +314,37 @@ function void fn00d42c()
 	}
 	
 	// this sets the extra slots shenangins
-	if (Mods.isModActive("Extra Characters Base") || Mods.isModActive("Extra Character Slots"))
+#if EXTRA_CHARACTERS_ACTIVE
+	if (dataselect.slot_selected > 0x00 && dataselect.slot_selected < 0x09 && objA0.animation.timer == 0x00 && u8[0xffffef56] != 0xff) // u8[0xffffef56] : Ignore this block if the slot has been deleted
 	{
-		if (objA0.animation.timer != 0x00 && u8[0xffffe654] == 0x00 && result == 0x01)
-		{
-			u8[0xffffe654] = objA0.animation.timer
-		}
+		bool setXtraChar = false
 		
-		if (dataselect.slot_selected > 0x00 && dataselect.slot_selected < 0x09 && objA0.animation.timer == 0x00 && u8[0xffffef56] != 0xff) // u8[0xffffef56] : Ignore this block if the slot has been deleted
+		if (u8[A0 + 0x05] > 0x00 && u8[A1] != 0x80)
 		{
-			bool setXtraChar = 0x00
-			
-			// These are the same sets addresses from fn00d7c0()
-			if (u8[A0 + 0x05] != 0x00 && u8[A1] != 0x80)
+			for (u8 char = 0x01; char <= 0xff; ++char)
 			{
-				for (u8 char = 0x01; char <= 0x03; ++char)
+				if (u8[A0 + 0x05] == char)
 				{
-					if ((u8[A0 + 0x05] == char) && (Renderer.hasCustomSprite(stringformat("dataSel_slot%d", char))))
-					{
-						u8[0xffffe654] = char
-						setXtraChar = 0x01
-						
-						objA0.animation.timer = char
-						objA0.animation.sprite = 0x05
-						
-						break
-					}
+					setXtraChar = true
+					
+					objA0.animation.timer = char
+					objA0.animation.sprite = 0x05
+					
+					break
 				}
 			}
-			
-			if (setXtraChar == 0x00)
-			{
-				objA0.animation.sprite = u16[A0 + 0x34] + 0x04
-			}
 		}
-		else
-		{
+
+		if (setXtraChar == false)
 			objA0.animation.sprite = u16[A0 + 0x34] + 0x04
-		}
-		objA0.animation.sprite = u16[A0 + 0x34] + 4
 	}
+	else
+	{
+		objA0.animation.sprite = u16[A0 + 0x34] + 0x04
+	}
+#else
+	objA0.animation.sprite = u16[A0 + 0x34] + 0x04
+#endif
 	
 	fn00d69e()
 }
@@ -554,11 +552,6 @@ function void ESS_drawchar(s16 px, s16 py, u64 key, bool xflip)
 	Renderer.drawSprite(key, px, py, 0, (xflip) ? SPRITE_FLAG_FLIP_X : 0, 0x6000)
 }
 
-function bool ESS_drawchar_Es(s16 px, s16 py, bool no_save, u8 ES_val)
-{
-	return false
-}
-
 function u64 ESS_getCharSpr(u8 character)
 {
 	if (character == 0xff)
@@ -591,11 +584,6 @@ function s32 ESS_saveboxgetcolor(u8 chars)
 	else if (chars == CHARS_KNUCKLES_ALONE)
 		color = 0x249048
 	return color
-}
-
-function s32 ESS_saveboxgetcolor_Es(u8 ES_val)
-{
-	return 0xff00ff
 }
 
 function void ESS_drawcharicons(u8 chars, s16 px, s16 py)
@@ -790,33 +778,34 @@ function void ESS_ReloadSaves()
 	System.loadPersistentData(0xffffe6ac, ESS_getSaveStr("SRAM_Saveslots"), 0x50)
 	System.loadPersistentData(0x801100, ESS_getSaveStr("SRAM_SaveslotsExt"), 0x100)
 	
-	if (Mods.isModActive("Extra Characters Base") || Mods.isModActive("Extra Character Slots"))
+#if EXTRA_CHARACTERS_ACTIVE
+	zeroMemory(sharedmemory.xtrachar, 0x08)
+	System.loadPersistentData(sharedmemory.xtrachar, ESS_getSaveStr("SRAM_Extraslots"), 0x08)
+	
+	global.xtrachar = 0
+	
+	u32 tempValue0 = 0xffffb128
+	u32 tempValue1 = sharedmemory.xtrachar
+	
+	// Loop simulates slots
+	for (u8 i = 0x01; i < 0x09; ++i)
 	{
-		u8[0xffffe654] = 0
-		// Loop simulates slots
-		for (u8 slot = 0x00; slot < 0x08; ++slot)
-		{
-			// Slot offset load
-			u8 saveOffset = 0x820000
-			for (u8 offset = slot; offset < 0x01; --offset)
-				saveOffset += 0x01
-			saveOffset *= 0x04
-			
-			// Slot address load
-			u32 slotAddress = 0xffffb128 + (0x4a * slot)
-			
-			// Load PersistentData for each slot
-			u8 loadSlotExtraData = System.loadPersistentData(saveOffset, ESS_getSaveStr(stringformat("ExtraSlot_%d", slot + 0x01)), 0x04)
-			
-			// If the slot data is not equal to 0, then set this data to u8[slotAddress + 0x05]
-			if (loadSlotExtraData != 0x00)
-				u8[slotAddress + 0x05] = loadSlotExtraData
-
-			// Fixes the disappearance of the character art for a new save
-			if (u8[slotAddress + 0x22] == 0x00 && u8[slotAddress + 0x24] != 0x00)
-				u8[slotAddress + 0x22] = 0x05
-		}
+		// Debug message
+		//debugLog(stringformat("#%d; Slot address: 0x%06x, Extra address: 0x%06x, Extra loaded: %03d, Extra sets: %03d", i, tempValue0, tempValue1, u8[tempValue1], u8[tempValue0 + 0x05]))
+		
+		// Set an extra character if it has been saved
+		if (u8[tempValue1] > 0x00 && Renderer.hasCustomSprite(stringformat("dataSel_slot%d", u8[tempValue1])))
+			u8[tempValue0 + 0x05] = u8[tempValue1]
+		
+		// Fixes the disappearance of the character art for a new save
+		if (u8[tempValue0 + 0x22] == 0x00 && u8[tempValue0 + 0x24] != 0x00)
+			u8[tempValue0 + 0x22] = 0x05
+		
+		// Go to next slot address
+		tempValue0 += 0x4a
+		tempValue1 += 0x01
 	}
+#endif
 	
 	for (u8 num = 0; num < 8; ++num)
 	{
@@ -830,32 +819,23 @@ function void ESS_ReloadSaves()
 		u8[A3 + 0x3e] = u8[A2 + 0x08] // lives
 		u8[A3 + 0x3f] = u8[A2 + 0x09] // continues
 		
-		if (Mods.isModActive("Extra Characters Base") || Mods.isModActive("Extra Character Slots"))
+	#if EXTRA_CHARACTERS_ACTIVE
+		u8[A3 + 0x24] = 0 // extra slot variable
+		u8[A3 + 0x22] = 0 // extra slot variable (the other one)
+		
+		bool setXtraChar = false
+		
+		if (u8[A3 + 0x05] > 0x00 && u8[A2] != 0x80)
 		{
-			u8[A3 + 0x24] = 0 // extra slot variable
-			u8[A3 + 0x22] = 0 // extra slot variable (the other one)
+			setXtraChar = true
 			
-			if (u8[A3 + 0x05] != 0x00 && u8[A2] != 0x80)
-			{
-				bool setXtraChar = 0x00
-				
-				// These are the same sets addresses from fn00d7c0()
-				if (u8[A3 + 0x05] != 0x00)
-				{
-					if (Renderer.hasCustomSprite(stringformat("dataSel_slot%d", u8[A3 + 0x05])))
-					{
-						u8[0xffffe654] = u8[A3 + 0x05]
-						setXtraChar = 0x01
-							
-						u8[A3 + 0x24] = u8[A3 + 0x05]
-						u8[A3 + 0x22] = 0x05
-					}
-				}
-				
-				if (setXtraChar == 0x00)
-					u8[A3 + 0x22] = u16[A0 + 0x34] + 0x04
-			}
+			u8[A3 + 0x24]  = u8[A3 + 0x05]
+			u8[A3 + 0x22] = 0x05
 		}
+		
+		if (setXtraChar == false)
+			u8[A3 + 0x22] = u16[A0 + 0x34] + 0x04
+	#endif
 	}
 	
 	// Check save slots to unlock DDZ in Act Select when DDZ was reached once
@@ -957,8 +937,9 @@ function void fn00d1fa()
 							if (ESS_save_entered == 2)
 								ESS_save_entered = 0
 
-							if (Mods.isModActive("Extra Characters Base") || Mods.isModActive("Extra Character Slots"))
-								u8[0xffffe654] = 0
+						#if EXTRA_CHARACTERS_ACTIVE
+							global.xtrachar = 0x00
+						#endif
 						}
 					}
 				}
@@ -973,8 +954,9 @@ function void fn00d1fa()
 						if (ESS_save_entered == 2)
 							ESS_save_entered = 0
 
-						if (Mods.isModActive("Extra Characters Base") || Mods.isModActive("Extra Character Slots"))
-							u8[0xffffe654] = 0
+					#if EXTRA_CHARACTERS_ACTIVE
+						global.xtrachar = 0x00
+					#endif
 					}
 				}
 			}
@@ -1065,39 +1047,32 @@ function void fn00d7a4()
 //# address-hook(0x00d7c0) end(0x00d7e6)
 function void fn00d7c0()
 {
-	if (Mods.isModActive("Extra Characters Base") || Mods.isModActive("Extra Character Slots"))
+#if EXTRA_CHARACTERS_ACTIVE
+	u32 tempValue0 = 0xffffb128
+	u32 tempValue1 = sharedmemory.xtrachar
+	
+	// Loop simulates slots
+	for (u8 i = 0x01; i < 0x09; ++i)
 	{
-		// Loop simulates slots
-		for (u8 slot = 0x00; slot < 0x08; ++slot)
+		// Debug message
+		//debugLog(stringformat("#%d; Slot address: 0x%06x, Extra address: 0x%06x, Extra loaded: %03d, Extra sets: %03d", i, tempValue0, tempValue1, u8[tempValue1], u8[tempValue0 + 0x05]))
+		
+		// Set an extra character if it has been saved
+		if (u8[tempValue1] > 0x00 && Renderer.hasCustomSprite(stringformat("dataSel_slot%d", u8[tempValue1])))
 		{
-			// Slot offset load
-			u8 saveOffset = 0x820000
-			for (u8 offset = slot; offset < 0x01; --offset)
-				saveOffset += 0x01
-			saveOffset *= 0x04
-			
-			// Slot address load
-			u32 slotAddress = 0xffffb128 + (0x4a * slot)
-			
-			// Load PersistentData for each slot
-			u8 loadSlotExtraData = System.loadPersistentData(saveOffset, ESS_getSaveStr(stringformat("ExtraSlot_%d", slot + 0x01)), 0x04)
-			
-			// If the slot data is not equal to 0, then set this data to u8[slotAddress + 0x05]
-			if (loadSlotExtraData != 0x00)
-			{
-				u8[slotAddress + 0x05] = loadSlotExtraData
-			}
-			
-			// Fixes the disappearance of the character art for a new save
-			if (u8[slotAddress + 0x22] == 0x00 && u8[slotAddress + 0x24] != 0x00)
-			{
-				
-				u8[slotAddress + 0x22] = 0x05
-			}
-			
-			//debugLog(stringformat("Slot ExtraChar : %d, %d", u8[slotAddress + 0x22], u8[slotAddress + 0x24]))
+			u8[tempValue0 + 0x24] = u8[tempValue1]	// Fixes the display of the very first slot
+			u8[tempValue0 + 0x05] = u8[tempValue1]
 		}
+		
+		// Fixes the disappearance of the character art for a new save
+		if (u8[tempValue0 + 0x22] == 0x00 && u8[tempValue0 + 0x24] != 0x00)
+			u8[tempValue0 + 0x22] = 0x05
+		
+		// Go to next slot address
+		tempValue0 += 0x4a
+		tempValue1 += 0x01
 	}
+#endif
 	
 	if (dataselect.slot_selected == 9 && control.pad1.pressed & DataSelect.CONTROLS_ACCEPT || Input.buttonPressed(BUTTON_Y) && dataselect.slot_selected >= 1)
 	{
@@ -1163,6 +1138,53 @@ function void fn00d7ea()
 	DrawObject()
 }
 
+#if EXTRA_CHARACTERS_ACTIVE
+
+//# address-hook(0x00d8c4) end(0x00d90c)
+function void fn00d8c4()
+{
+	fn00d912()
+	
+	if ((control.pad1.pressed & CONTROL_RIGHT) == 0x00)
+	{
+		if ((control.pad1.pressed & CONTROL_LEFT) == 0x00)
+		{
+			DrawObject()
+			return
+		}
+		
+		playSound(0x68)
+		
+		// Clear extra slot
+		u32 tempValue0 = sharedmemory.xtrachar + u32(dataselect.slot_selected - 0x01)
+		zeroMemory(tempValue0, 0x01)
+		
+		u32 tempValue1 = 0xffffb128 + (0x4a * (dataselect.slot_selected - 0x01))
+		u8[tempValue1 + 0x08] |= 0x01
+		u8[tempValue1 + 0x05] = 0x00
+		
+		System.savePersistentData(sharedmemory.xtrachar, ESS_getSaveStr("SRAM_Extraslots"), 0x08)
+		
+		// Clear save slot
+		A1 = u32[A0 + 0x2e]
+		u16[A1] = 0x8000
+		u32[A1 + 0x02] = 0x00
+		u16[A1 + 0x06] = 0x00
+		u16[A1 + 0x08] = 0x0300
+		
+		zeroMemory(0x801100 + 0x20 * u32(dataselect.slot_selected - 0x01), 0x20)
+		u8[0xffffef56] = 0xff
+		
+		SaveGameSlot()
+	}
+	
+	objA0.base_state = 0x08
+	u16[0xffffeee2] = 0x00
+	fn00d854()
+}
+
+#endif
+
 //# address-hook(0x00d884) end(0x00d8a0)
 function void fn00d884()
 {
@@ -1202,8 +1224,9 @@ function void fn00d854()
 
 function bool fn00d458()
 {
-	if (Mods.isModActive("Extra Characters Base") || Mods.isModActive("Extra Character Slots"))
-		u8[0xffffe654] = objA0.animation.timer
+#if EXTRA_CHARACTERS_ACTIVE
+	global.xtrachar = objA0.animation.timer
+#endif
 	
 	// Result values:
 	//  - 0 = Abort outer function

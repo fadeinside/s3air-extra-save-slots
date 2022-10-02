@@ -3,7 +3,7 @@
 include dataselect
 include renderhooks
 include saveslots
-//include extrafunctions
+include extrafunctions
 
 // menu stuff
 global u8 ESS_save_entered
@@ -87,64 +87,5 @@ function void Menu.FadeInAfterInit()
 			D4.u16 = backupD4
 		}
 	#endif
-	}
-}
-
-//# address-hook(0x0067b6) end(0x0067ec)
-function void SetGlobalCharacters()
-{
-	if ((Mods.isModActive("Extra Characters Base") || Mods.isModActive("Extra Character Slots")) == 0)
-	{
-		base.SetGlobalCharacters()
-		return
-	}
-	
-	if (levelselect.characters != 1 && u8[0xffffe654] != 2 && u8[0xffffe654] != 3)
-	{
-		u8[0xffffe654] = 0
-	}
-
-	if (dataselect.slot_selected > 0)
-	{
-		u8 saveOffset = 0x820000
-
-		for (u8 offset = dataselect.slot_selected; offset < 1; --offset)
-		{
-			++saveOffset
-		}
-		saveOffset *= 0x04
-	
-		u8 please = System.loadPersistentData(saveOffset, ESS_getSaveStr(stringformat("ExtraSlot_%d", dataselect.slot_selected)), 0x04)
-		u8[0xffffe654] = please
-	}
-
-	if (global.game_mode != 0x88 && competition_mode.active == 0)
-	{
-		if (u8[0xffffe654] != 0) // Only do it when on Sonic/extra slots
-		{
-			System.callFunctionByName(stringformat("Slot%xChar", u8[0xffffe654]))
-			return
-		}
-		else
-		{
-			global.characters = levelselect.characters
-		#if STANDALONE
-			// Handle Knuckles & Tails
-			useKnucklesAndTails = (global.characters == 4)
-			global.characters = min(global.characters, 3)
-		#endif
-		}
-	}
-	else if (global.zone == 0x07)	// MHZ
-	{
-		global.characters = CHARS_KNUCKLES_ALONE
-	}
-	else if (global.lock_on_state == 0)
-	{
-		global.characters = CHARS_SONIC_AND_TAILS
-	}
-	else
-	{
-		global.characters = CHARS_SONIC_ALONE
 	}
 }
